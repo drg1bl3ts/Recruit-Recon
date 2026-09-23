@@ -1,0 +1,50 @@
+/* Custom keyframes not expressible in Tailwind */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes collapse {
+  from { opacity: 1; max-height: 4000px; }
+  to   { opacity: 0; max-height: 0;      }
+}
+
+@keyframes countdown-bar {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.18s ease-out both;
+}
+
+.section-body-open {
+  animation: none;
+}
+
+.section-body-closed {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Countdown progress bar for auto-refresh */
+.countdown-bar {
+  transform-origin: left center;
+  animation: countdown-bar linear both;
+}
+
+/* Card hover lift — subtle, calming */
+.job-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.job-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Note textarea — warm focus ring */
+.note-area:focus {
+  outline: none;
+  box-shadow: 0 0 0 1.5px #57534e;
+}

@@ -1,0 +1,582 @@
+# RecruitRecon — company configuration
+# Adapters: greenhouse | lever | workable | workday | html_scraper | static
+# Add new entries here; recon.py picks them up automatically.
+
+# --- title keywords that mark a posting as relevant ---
+# matched case-insensitively, substring match against the job title
+title_keywords:
+  # --- Offensive / pen test ---
+  - penetration test
+  - pen test
+  - pentest
+  - pentester
+  - offensive security
+  - red team
+  - red-team
+  - application security
+  - appsec
+  - vector command
+  - attack surface
+  - security consultant
+  - security engineer
+  - vulnerability research
+
+  # --- Blue team / defensive ---
+  - soc analyst
+  - security operations
+  - incident response
+  - incident responder
+  - threat hunt
+  - threat intel
+  - threat intelligence
+  - detection engineer
+  - detection engineering
+  - blue team
+  - purple team
+  - digital forensics
+  - dfir
+  - malware analyst
+  - reverse engineer
+  - security analyst
+  - cyber defense
+  - cybersecurity analyst
+  - information security analyst
+  - infosec analyst
+  - siem
+  - soar
+  - endpoint security
+  - network security analyst
+
+  # --- Adjacent / entry-point roles ---
+  - security specialist
+  - security associate
+  - junior analyst
+  - associate analyst
+  - it security
+
+# --- certifications to flag in job descriptions ---
+# regex matched against description text
+certs_to_flag:
+  # --- SANS: your roadmap ---
+  - GFACT
+  - GSEC
+  - GCIH
+  - GPEN
+
+  # --- SANS: blue team adjacent ---
+  - GCFA
+  - GCFE
+  - GREM
+  - GNFA
+  - GMON
+  - GCDA
+  - GCTI
+  - GDAT
+  - GCIA
+
+  # --- SANS: pen test adjacent ---
+  - GWAPT
+  - GXPN
+
+  # --- Vendor / industry ---
+  - CISSP
+  - CEH
+  - Security+
+  - CySA+
+  - CASP+
+  - OSCP
+  - OSEP
+  - OSWE
+  - OSCE
+  - OSED
+  - PNPT
+  - PJPT
+  - CPTS
+  - BSCP
+  - CRTO
+  - CCD
+  - BTL1
+  - BTL2
+  - eJPT
+  - eCPPT
+
+# --- explicit cert markers that push a job into Tier A ---
+# Any job whose description mentions ANY cert in this list gets promoted to
+# Tier A on the board (along with a GPEN-style badge). This is how you tell
+# the collector "these are certs I have or am actively working toward —
+# prioritize jobs that want them."
+#
+# As you pass each cert, leave it in the list (a job mentioning GFACT won't
+# hurt you after you've passed it). Add the next cert as you start studying it.
+# Historical name `gpen_marker` is preserved for back-compat — it accepts
+# either a single string or a list.
+gpen_marker:
+  - GFACT
+  - GSEC
+  - GCIH
+  - GPEN
+
+# --- companies to monitor ---
+companies:
+
+  # ===================================================================
+  # OFFENSIVE / PEN TEST SHOPS
+  # ===================================================================
+
+  - id: praetorian
+    name: Praetorian
+    adapter: greenhouse
+    config:
+      board_token: praetorian
+
+  - id: specterops
+    name: SpecterOps
+    adapter: greenhouse
+    config:
+      board_token: specterops
+
+  - id: coalfire
+    name: Coalfire
+    adapter: lever
+    config:
+      company: coalfire
+
+  - id: trail-of-bits
+    name: Trail of Bits
+    adapter: workable
+    config:
+      account: trailofbits
+
+  - id: black-lantern
+    name: Black Lantern Security
+    adapter: html_scraper
+    config:
+      url: https://www.blacklanternsecurity.com/careers/
+      mode: container
+      job_selector: "div.accordion-header"
+      title_selector: "self"
+      shared_apply_link_selector: "a[href*='monday.com']"
+
+  - id: deepwatch
+    name: Deepwatch
+    adapter: greenhouse
+    # MDR platform + pen test services. Explicitly GCIH/GPEN-track roles.
+    # Correct token is "deepwatchinc" — deepwatch and deepwatchsec both 404.
+    config:
+      board_token: deepwatchinc
+
+  - id: rhino-security-labs
+    name: Rhino Security Labs
+    adapter: workable
+    # Boutique offensive security firm (coined the SSRF-in-cloud-metadata attack).
+    # Small team; occasional consultant and researcher openings.
+    config:
+      account: rhino-security-labs
+
+  - id: ncc-group
+    name: NCC Group
+    adapter: workday
+    # Major UK-headquartered consultancy with strong North American presence.
+    # Explicit Junior Security Consultant → Penetration Tester pipeline.
+    # NOTE: Their global Workday board sometimes returns zero results even
+    # when LinkedIn shows active openings. They may publish to region-specific
+    # sub-boards. If you see persistent zero results, manually check
+    # nccgroup.wd3.myworkdayjobs.com to find the correct site_id for North America.
+    config:
+      tenant: nccgroup
+      region: wd3
+      site_id: NCC_Group
+      locale: en-US
+
+  - id: optiv
+    name: Optiv
+    adapter: workday
+    # Large security solutions integrator. Has an explicit Associates Program
+    # for new grads, career changers, and military veterans — that's your
+    # demographic. Roles span pen testing, SOC, and consulting.
+    config:
+      tenant: optiv
+      region: wd5
+      site_id: Optiv_Careers
+      locale: en-US
+
+  - id: bugcrowd
+    name: Bugcrowd
+    adapter: greenhouse
+    # Bug bounty platform. Application Security Engineers triage incoming
+    # vulnerability submissions for bounty programs run on their platform.
+    # Excellent learning role: you'll see hundreds of OWASP Top 10 reports
+    # against real-world apps. Strong Burp Suite + scripting requirements.
+    config:
+      board_token: bugcrowd
+
+  - id: synack-srt
+    name: Synack Red Team
+    adapter: greenhouse
+    # NOT a W-2 employee role — this is contract/freelance pen testing on
+    # Synack's platform. Apply once, get vetted, take engagements when you
+    # want. Worth keeping on the board because it's an excellent post-GPEN
+    # side-income channel even if you have a full-time job elsewhere.
+    config:
+      board_token: synacksrt
+
+  - id: hackerone
+    name: HackerOne
+    adapter: ashby
+    # Bug bounty / VDP platform. Hires triage analysts ("Hai Triage Analyst"),
+    # security engineers, and product roles. Many roles are remote.
+    # Slug found at jobs.ashbyhq.com/hackerone
+    config:
+      slug: hackerone
+
+  - id: sentinelone
+    name: SentinelOne
+    adapter: greenhouse
+    # XDR/EDR platform vendor. Hires detection engineers, threat hunters,
+    # and IR consultants via their Vigilance MDR arm. The careers site wraps
+    # a standard Greenhouse embed — correct token is "sentinellabs".
+    # URL parameter gh_jid confirms Greenhouse: sentinelone.com/jobs/?gh_jid=...
+    config:
+      board_token: sentinellabs
+
+  - id: recorded-future
+    name: Recorded Future
+    adapter: greenhouse
+    # Threat intelligence platform (acquired by Mastercard 2024).
+    # Hires intel analysts, detection engineers, and red teamers.
+    config:
+      board_token: recordedfuture
+
+  # ===================================================================
+  # BLUE TEAM / SOC / MDR / IR
+  # ===================================================================
+
+  - id: sophos
+    name: Sophos (incl. Secureworks)
+    adapter: lever
+    # Sophos acquired Secureworks in 2024. Secureworks roles (MDR, IR,
+    # Counter Threat Unit) now live on the Sophos Lever board.
+    config:
+      company: sophos
+
+  - id: trellix
+    name: Trellix
+    adapter: workday
+    # Merged entity of FireEye + McAfee Enterprise (rebranded 2022).
+    # Hires malware analysts, detection engineers, and SOC consultants.
+    config:
+      tenant: trellix
+      region: wd1
+      site_id: EnterpriseCareers
+      locale: en-US
+
+  - id: huntress
+    name: Huntress
+    adapter: greenhouse
+    # Founded by ex-NSA operators; fully remote since day one.
+    # Hires SOC Analysts and Security Operations Analysts on a rolling basis.
+    # Explicitly values TryHackMe / HackTheBox / Blue Team Labs experience.
+    config:
+      board_token: huntress
+
+  - id: zscaler
+    name: Zscaler (incl. Red Canary)
+    adapter: greenhouse
+    # Red Canary was acquired by Zscaler in 2025 — their jobs now live on
+    # Zscaler's Greenhouse board. Zscaler is a SASE / Zero Trust vendor with
+    # SOC, threat hunting, and detection engineering roles via the Red Canary
+    # business unit.
+    config:
+      board_token: zscaler
+
+  - id: arctic-wolf
+    name: Arctic Wolf
+    adapter: workday
+    # Large MSSP; significant SOC analyst pipeline including entry-level.
+    # If the collector errors on this one, the Workday tenant may have
+    # changed — visit their careers page and update tenant/region/site_id.
+    config:
+      tenant: arcticwolf
+      region: wd1
+      site_id: External
+      locale: en-US
+
+  - id: expel
+    name: Expel
+    adapter: greenhouse
+    # MDR with transparency-first model. Fully remote. Frequently hires
+    # SOC analysts and detection engineers. Strong reputation in industry.
+    config:
+      board_token: expel
+
+  - id: dragos
+    name: Dragos
+    adapter: greenhouse
+    # OT/ICS cybersecurity specialty — defends critical infrastructure
+    # (power, water, manufacturing). Remote-first culture. Niche but
+    # growing fast; good way to differentiate yourself with industrial
+    # cyber experience that few candidates have.
+    config:
+      board_token: dragos
+
+  - id: reliaquest
+    name: ReliaQuest
+    adapter: workday
+    # Tampa, FL headquartered (Florida market match for you).
+    # Training-focused culture — they explicitly state no degree required
+    # for SOC analyst roles. Strong T1/T2 progression pipeline.
+    config:
+      tenant: reliaquest
+      region: wd5
+      site_id: ReliaQuest_Careers
+      locale: en-US
+
+  - id: crowdstrike
+    name: CrowdStrike
+    adapter: workday
+    # Industry behemoth, but they hire heavily in detection engineering,
+    # threat hunting, malware analysis, and Falcon Complete (their MDR
+    # service). Noisy listing — expect lots of skip-by-title.
+    config:
+      tenant: crowdstrike
+      region: wd5
+      site_id: crowdstrikecareers
+      locale: en-US
+
+  - id: rapid7
+    name: Rapid7
+    adapter: workday
+    config:
+      tenant: mymoose
+      region: wd1
+      site_id: careers
+      locale: en-US
+
+  - id: volaris
+    name: Volaris Group
+    adapter: workday
+    config:
+      tenant: volarisgroup
+      region: wd3
+      site_id: volaris
+      locale: en-US
+
+  # ===================================================================
+  # GOVERNMENT / DEFENSE CONTRACTORS
+  # Heavy cleared / DoD pipeline. Expect 50–500+ jobs per board;
+  # title-keyword filtering surfaces the security-relevant subset.
+  # ===================================================================
+
+  - id: booz-allen
+    name: Booz Allen Hamilton
+    adapter: workday
+    # One of the largest cleared cybersecurity employers in the US.
+    # Strong pen test and cyber operations practice (formerly NSA/CSS staffing).
+    # Many TS/SCI roles. BAH Cyber Fast Track targets entry candidates.
+    # fetch_descriptions disabled — BAH's Workday detail endpoint returns 403
+    # on per-job fetches even though the listing endpoint is public.
+    config:
+      tenant: bah
+      region: wd1
+      site_id: BAH_Jobs
+      locale: en-US
+      fetch_descriptions: false
+
+  - id: leidos
+    name: Leidos
+    adapter: workday
+    # Large defense IT integrator. Active cyber and SIGINT portfolios
+    # (notably the DHS CDM program). Hires analysts, pen testers, and
+    # forensics staff. Expect significant cleared role volume.
+    config:
+      tenant: leidos
+      region: wd5
+      site_id: External
+      locale: en-US
+
+  - id: peraton
+    name: Peraton
+    adapter: icims
+    # Spun off from Northrop Grumman's IT division. Core cyber mission areas:
+    # CNO, SIGINT, and cyber defense for IC and DoD clients. Strong TS/SCI
+    # pipeline. iCIMS tenant is "careers-peraton" (not "peraton").
+    config:
+      custom_domain: careers-peraton.icims.com
+
+  # ===================================================================
+  # STATIC / DIRECT-EMAIL SHOPS
+  # No automated source; emits a fixed reference card.
+  # ===================================================================
+
+  - id: lares
+    name: Lares Consulting
+    adapter: static
+    config:
+      url: https://www.lares.com/careers/
+      apply_url: mailto:[email protected]
+      note: "Direct email outreach. Hands-on > certs per their site."
+      static_roles:
+        - "Network Penetration Tester (email)"
+        - "Application Security Tester (email)"
+
+  - id: trustfoundry
+    name: TrustFoundry
+    adapter: static
+    config:
+      url: https://trustfoundry.net/about
+      apply_url: mailto:[email protected]
+      note: "~10-person team, invites unsolicited applications"
+      static_roles:
+        - "Penetration Tester (mid → Principal, email)"
+
+  - id: bishop-fox
+    name: Bishop Fox
+    adapter: static
+    config:
+      url: https://bishopfox.com/company/internships
+      apply_url: mailto:[email protected]
+      note: "Autumn intern intake — email to be in next cycle"
+      static_roles:
+        - "Internship — Consulting Services (autumn cycle)"
+
+  - id: netspi
+    name: NetSPI
+    adapter: static
+    # Consultancy known for BAS (Breach & Attack Simulation) platform.
+    # Uses UKG Pro — no public API. Check board directly for analyst / consultant roles.
+    config:
+      url: https://netspi.rec.pro.ukg.net/NET1500NSPI/JobBoard/944d4e9c-f503-4e74-bb8b-f79214e2a5e1/
+      apply_url: https://netspi.rec.pro.ukg.net/NET1500NSPI/JobBoard/944d4e9c-f503-4e74-bb8b-f79214e2a5e1/
+      note: "UKG Pro board — no public API. Check URL for security consultant roles."
+      static_roles:
+        - "Security Consultant / Analyst roles (check board)"
+
+  - id: netspi-u
+    name: NetSPI University
+    adapter: static
+    config:
+      url: https://www.netspi.com/careers/netspi-u/
+      apply_url: https://www.netspi.com/careers/netspi-u/
+      note: "Annual cohort — Jul/Aug 2026 expected to post for Jan 2027 start"
+      static_roles:
+        - "Associate Security Consultant (NetSPI U) — annual cohort"
+
+  - id: offsec
+    name: OffSec (Offensive Security)
+    adapter: static
+    # OSCP/OSEP cert body. Also hires course developers, lab engineers,
+    # and occasional security research roles. Uses Deel Jobs — no public API.
+    config:
+      url: https://jobs.deel.com/offsec
+      apply_url: https://jobs.deel.com/offsec
+      note: "Deel Jobs board — no public API. Check URL directly."
+      static_roles:
+        - "Course Developer / Lab Engineer (check Deel board)"
+
+  - id: esentire
+    name: eSentire
+    adapter: static
+    # MDR provider, Canadian-headquartered. Strong SOC analyst / threat hunter
+    # pipeline. Uses Dayforce HCM — no public API.
+    config:
+      url: https://www.dayforcehcm.com/CandidatePortal/en-US/esentire/Site/CANDIDATEPORTAL
+      apply_url: https://www.dayforcehcm.com/CandidatePortal/en-US/esentire/Site/CANDIDATEPORTAL
+      note: "Dayforce HCM board — no public API. Check URL for SOC / IR roles."
+      static_roles:
+        - "SOC Analyst / Threat Hunter (check Dayforce board)"
+
+  - id: bluevoyant
+    name: BlueVoyant
+    adapter: static
+    # MDR + supply chain risk intel. Hires SOC analysts and threat hunters.
+    # Uses JazzHR — no public API.
+    config:
+      url: https://bluevoyant.applytojob.com/apply
+      apply_url: https://bluevoyant.applytojob.com/apply
+      note: "JazzHR board — no public API. Check URL for analyst roles."
+      static_roles:
+        - "SOC Analyst / Intelligence Analyst (check JazzHR board)"
+
+  - id: palo-alto-networks
+    name: Palo Alto Networks
+    adapter: static
+    # Major security platform vendor. Cortex XSIAM + Unit 42 (consulting) hire
+    # detection engineers, IR consultants, and threat hunters. Uses TalentBrew —
+    # no documented public jobs API.
+    config:
+      url: https://jobs.paloaltonetworks.com/
+      apply_url: https://jobs.paloaltonetworks.com/
+      note: "TalentBrew board — no public API. Filter by 'Unit 42' or 'Cortex' for security roles."
+      static_roles:
+        - "Unit 42 Consultant / IR / Detection Engineer (check TalentBrew board)"
+
+  - id: mantech
+    name: ManTech
+    adapter: static
+    # Large cleared defense contractor. Active cybersecurity practice across
+    # DHS, DoD, and IC programs. Uses Avature — no public API.
+    config:
+      url: https://careers.mantech.com/en_US/careers/
+      apply_url: https://careers.mantech.com/en_US/careers/
+      note: "Avature board — no public API. Search 'cyber' or 'security analyst' on their site."
+      static_roles:
+        - "Cybersecurity Analyst / Pen Tester (cleared roles, check Avature board)"
+
+  - id: caci
+    name: CACI International
+    adapter: static
+    # Another major cleared IT / cyber contractor. Hires cyber warriors,
+    # intel analysts, and SIGINT specialists. Uses Eightfold AI — no public API.
+    config:
+      url: https://searchcareers.caci.com/careers
+      apply_url: https://searchcareers.caci.com/careers
+      note: "Eightfold AI board — no public API. Search 'cyber' or 'security' on their site."
+      static_roles:
+        - "Cybersecurity Specialist / SIGINT Analyst (cleared roles, check board)"
+
+  - id: mitre
+    name: MITRE Corporation
+    adapter: static
+    # Non-profit R&D. Manages ATT&CK, CVSS, and CVE databases. Hires red teamers,
+    # vulnerability researchers, and detection engineers. Uses Phenom People — no API.
+    config:
+      url: https://careers.mitre.org/us/en/search-results
+      apply_url: https://careers.mitre.org/us/en/search-results
+      note: "Phenom People board — no public API. Check URL; filter by Cyber/Security department."
+      static_roles:
+        - "Cybersecurity Researcher / Red Teamer / Detection Engineer (check Phenom board)"
+
+  - id: binary-defense
+    name: Binary Defense
+    adapter: paylocity
+    # 100% remote SOC. Active roles include the Cybersecurity Incident
+    # Response Analyst (GCIH-track), Tier 1 SOC Analyst, and SOC Analyst
+    # Internship (which explicitly accepts students).
+    #
+    # Paylocity exposes job data via SSR-injected window.pageData on the
+    # public careers page (the documented v2 Job Feed API requires a
+    # different per-customer key that isn't exposed publicly).
+    #
+    # company_id + company_slug come from the public URL:
+    # recruiting.paylocity.com/recruiting/jobs/All/<company_id>/<company_slug>
+    config:
+      company_id: 021c9a71-0fb7-40fc-ab23-5370c11658d5
+      company_slug: Binary-Defense
+      fetch_descriptions: true
+
+# --- runtime knobs ---
+runtime:
+  request_timeout_seconds: 15
+  inter_request_delay_ms: 250
+  user_agent: "RecruitRecon/0.1 (personal job tracker)"
+  verify_company_page: true
+  output_json_path: data/jobs.json
+  database_path: data/recon.db
+  # Auto-delete closed/disappeared jobs older than this many days so the DB
+  # doesn't accumulate dead listings forever.  Set to 0 to disable.
+  purge_closed_after_days: 60
+  # Bounded worker count for per-job verification and per-posting detail
+  # fetches (Workday, Paylocity). Each worker still paces itself with
+  # inter_request_delay_ms, so this trades wall-clock time for request
+  # concurrency without dropping the per-request politeness delay.
+  verify_concurrency: 4

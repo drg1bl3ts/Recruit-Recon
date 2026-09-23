@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Stray Python venv accidentally created inside frontend/ — not part of the
+# JS project, unused by anything, but harmless to leave in place locally.
+frontend/.venv/
+
+# Generated at runtime by recon.py — personal/per-run state, not source.
+# Fresh clones recreate data/ automatically (db.py creates it on first run).
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/*.log
+data/jobs.json
+frontend/public/jobs.json
+
+# Editor / OS cruft
+.DS_Store
+*.swp
+.vscode/*
+!.vscode/extensions.json
+.idea/
