@@ -373,14 +373,30 @@ companies:
     # One of the largest cleared cybersecurity employers in the US.
     # Strong pen test and cyber operations practice (formerly NSA/CSS staffing).
     # Many TS/SCI roles. BAH Cyber Fast Track targets entry candidates.
-    # fetch_descriptions disabled — BAH's Workday detail endpoint returns 403
-    # on per-job fetches even though the listing endpoint is public.
+    #
+    # Board is >2000 postings, and Workday hard-caps every search at 2000
+    # (past that it just repeats page 1). "security" is useless here — nearly
+    # every posting mentions "security clearance" — so search narrow terms
+    # instead. Checked 2026-10: this set found all 77 title-matching live
+    # roles; "security engineer" (~1500) is what catches AppSec titles.
     config:
       tenant: bah
       region: wd1
       site_id: BAH_Jobs
       locale: en-US
-      fetch_descriptions: false
+      search_text:
+        - cyber
+        - penetration
+        - incident response
+        - forensics
+        - threat
+        - SOC
+        - vulnerability
+        - red team
+        - malware
+        - SIEM
+        - security engineer
+      max_pages: 100
 
   - id: leidos
     name: Leidos

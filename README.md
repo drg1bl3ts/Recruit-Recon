@@ -121,6 +121,7 @@ Every collected job's `apply_url` is fetched via HTTP GET and classified:
 | `verified_live` | HTTP 200 and no dead-text marker in the page |
 | `closed_404` / `closed_410` | HTTP 404, or 410 (Workable's hard-delete) |
 | `closed_inactive_text` | HTTP 200 but the page text matches a known "this job is closed" phrase |
+| `closed_unposted` | Workday only: the job API reports the posting was taken down |
 | `disappeared_from_api` | Missing from the ATS's list response, and re-checking its own URL couldn't confirm it's still live |
 | `error` | Network failure, or an HTTP error other than 404/410 |
 | `skipped` | Verification disabled, or the entry is `static` (no live URL to check) |
@@ -135,7 +136,7 @@ The frontend buckets cards by status + cert match:
 - **Tier A** — `verified_live` and mentions a cert in your `gpen_marker` list
 - **Tier B** — `verified_live`, no cert match
 - **Tier C** — `static` or unverified entries
-- **Closed** — `closed_404`, `closed_410`, `closed_inactive_text`, `disappeared_from_api`, or `error`
+- **Closed** — `closed_404`, `closed_410`, `closed_inactive_text`, `closed_unposted`, `disappeared_from_api`, or `error`
 
 ---
 
@@ -209,7 +210,10 @@ Then add an entry (Greenhouse example):
 **Large Workday boards** (Cisco, HPE, Salesforce...) can have thousands of
 postings. Add `search_text` to narrow the list server-side, and raise
 `max_pages` (default 50 pages × 20 = 1000 postings) if the log warns it was
-hit. Workday indexes "cybersecurity" separately from "security", so query both:
+hit. Workday indexes "cybersecurity" separately from "security", so query both.
+Workday also hard-caps every search at 2000 results — if the log says a
+search hit that cap, split it into narrower terms (see `booz-allen` in
+`config.yaml`):
 
 ```yaml
 - id: cisco

@@ -67,6 +67,9 @@ Config per company:
                  Workday's search is loose full-text (description matches
                  count), so "security" still returns ~1400 at Cisco — it
                  narrows the list, the title filter does the rest.
+                 Each search is capped at 2000 results by Workday itself
+                 (no paging past it), so boards bigger than that (Booz
+                 Allen) need several narrow terms rather than one broad one.
 
 Descriptions are only fetched for postings that pass the adapter's
 title_filter (supplied by recon.py from title_keywords). Postings that fail
@@ -86,6 +89,10 @@ from .base import Adapter, Job
 
 
 log = logging.getLogger(__name__)
+
+# Hard per-search limit: Workday reports total=2000 at most, and offsets past
+# 2000 return page 1 again rather than more postings.
+_WORKDAY_RESULT_CAP = 2000
 
 
 class WorkdayAdapter(Adapter):
@@ -248,7 +255,16 @@ class WorkdayAdapter(Adapter):
             if known_total is not None and offset >= known_total:
                 break
 
-        if known_total is not None and offset < known_total:
+        if known_total is not None and known_total >= _WORKDAY_RESULT_CAP:
+            # Workday never reports or serves more than 2000 results per
+            # search — offsets past it just return page 1 again — so the
+            # board is probably bigger than what we got. max_pages can't help.
+            log.warning(
+                "workday[%s]: search %r hit Workday's %d-result cap — postings "
+                "beyond it are unreachable; use narrower search_text terms",
+                self.company_id, search_text, _WORKDAY_RESULT_CAP,
+            )
+        if known_total is not None and offset < min(known_total, _WORKDAY_RESULT_CAP):
             # Hit max_pages before the end — the tail of the board is missing.
             log.warning(
                 "workday[%s]: stopped at max_pages=%d (%d of %d postings for "

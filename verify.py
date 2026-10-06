@@ -11,11 +11,13 @@ Verification result codes:
     closed_404             - HTTP 404
     closed_410             - HTTP 410 (Workable's hard-delete)
     closed_inactive_text   - HTTP 200 but page contains a "this job is closed" marker
+    closed_unposted        - Workday API says the posting was taken down (403 S22)
     error                  - network / parse failure after all retries
     skipped                - URL is non-HTTP (mailto:, empty) or verification disabled
 """
 
 import logging
+import re
 import time
 from typing import Optional
 
@@ -48,6 +50,32 @@ DEAD_TEXT_MARKERS = [
 
 _MAX_ATTEMPTS = 3
 
+# Workday's public job page (…myworkdayjobs.com/{locale}/{site}/job/…) is an
+# empty JS shell that returns HTTP 200 whether or not the posting still
+# exists, so the page check can never see a closed Workday job. The CXS JSON
+# API behind it can: 200 = live, 404 (errorCode S21) = never existed,
+# 403 with errorCode S22 = existed but has been unposted. Locale is optional
+# in public URLs.
+_WORKDAY_PUBLIC_RE = re.compile(
+    r"^https://(?P<tenant>[^./]+)\.(?P<region>[^./]+)\.myworkdayjobs\.com"
+    r"/(?:[a-z]{2}-[A-Z]{2}/)?(?P<site>[^/]+)(?P<path>/job/.+)$"
+)
+_WORKDAY_UNPOSTED_CODE = "S22"
+
+
+def _workday_api_url(url: str) -> Optional[str]:
+    """Map a public Workday job URL to its CXS API URL, or None if `url`
+    isn't one."""
+    m = _WORKDAY_PUBLIC_RE.match(url)
+    if not m:
+        return None
+    return (f"https://{m['tenant']}.{m['region']}.myworkdayjobs.com"
+            f"/wday/cxs/{m['tenant']}/{m['site']}{m['path']}")
+
+
+def _result(status: str, http_status) -> dict:
+    return {"status": status, "http_status": http_status, "checked_at": now_iso()}
+
 
 def verify_url(
     url: str,
@@ -70,7 +98,7 @@ def verify_url(
     Falls back to a one-off `requests.get` when omitted.
     """
     if not url or not url.startswith("http"):
-        return {"status": "skipped", "http_status": None, "checked_at": now_iso()}
+        return _result("skipped", None)
 
     # Pace requests: sleep before issuing the GET so rapid back-to-back calls
     # naturally rate-limit without the caller needing to manage timing.
@@ -78,11 +106,64 @@ def verify_url(
 
     requester = session or requests
 
+    api_url = _workday_api_url(url)
+    if api_url:
+        resp = _get(requester, api_url, "application/json", user_agent, timeout)
+        if isinstance(resp, requests.Response):
+            http = resp.status_code
+            if http == 200:
+                return _result("verified_live", http)
+            if http == 404:
+                return _result("closed_404", http)
+            if http == 403 and _workday_error_code(resp) == _WORKDAY_UNPOSTED_CODE:
+                return _result("closed_unposted", http)
+        # Anything else (network failure, a tenant that blocks the API
+        # outright) isn't a reliable signal either way — fall back to the
+        # public page check below rather than call a live job closed.
+        log.debug("workday API check inconclusive for %s, falling back to page", url)
+
+    resp = _get(requester, url, "text/html,*/*", user_agent, timeout)
+    if not isinstance(resp, requests.Response):
+        return resp  # already a result dict (network failure / repeated 429)
+
+    http = resp.status_code
+    if http == 404:
+        return _result("closed_404", 404)
+    if http == 410:
+        return _result("closed_410", 410)
+    if http >= 400:
+        return _result("error", http)
+
+    body_lower = resp.text.lower() if resp.text else ""
+    for marker in DEAD_TEXT_MARKERS:
+        if marker in body_lower:
+            return _result("closed_inactive_text", http)
+
+    return _result("verified_live", http)
+
+
+def _workday_error_code(resp: requests.Response) -> Optional[str]:
+    try:
+        data = resp.json()
+    except ValueError:
+        return None
+    return data.get("errorCode") if isinstance(data, dict) else None
+
+
+def _get(requester, url: str, accept: str, user_agent: str, timeout: int):
+    """
+    GET `url`, retrying up to _MAX_ATTEMPTS times on:
+    - transient network errors (ConnectionError, Timeout)
+    - HTTP 429 Too Many Requests (honours Retry-After header, capped at 30s)
+
+    Returns the Response, or a final result dict ("error") once retries are
+    exhausted.
+    """
     for attempt in range(_MAX_ATTEMPTS):
         try:
             resp = requester.get(
                 url,
-                headers={"User-Agent": user_agent, "Accept": "text/html,*/*"},
+                headers={"User-Agent": user_agent, "Accept": accept},
                 timeout=timeout,
                 allow_redirects=True,
             )
@@ -97,14 +178,12 @@ def verify_url(
                 continue
             log.warning("verify network error for %s (all %d attempts failed): %s",
                         url, _MAX_ATTEMPTS, e)
-            return {"status": "error", "http_status": None, "checked_at": now_iso()}
-
-        http = resp.status_code
+            return _result("error", None)
 
         # 429 — back off and retry, honouring the server's Retry-After if present.
         # Retry-After may be seconds (RFC 7231) or an HTTP-date; we only handle
         # the numeric form and fall back to the cap otherwise.
-        if http == 429:
+        if resp.status_code == 429:
             try:
                 retry_after = min(int(resp.headers.get("Retry-After", 5)), 30)
             except ValueError:
@@ -116,25 +195,9 @@ def verify_url(
             if attempt < _MAX_ATTEMPTS - 1:
                 time.sleep(retry_after)
                 continue
-            return {"status": "error", "http_status": 429, "checked_at": now_iso()}
+            return _result("error", 429)
 
-        if http == 404:
-            return {"status": "closed_404",  "http_status": 404, "checked_at": now_iso()}
-        if http == 410:
-            return {"status": "closed_410",  "http_status": 410, "checked_at": now_iso()}
-        if http >= 400:
-            return {"status": "error",       "http_status": http, "checked_at": now_iso()}
-
-        body_lower = resp.text.lower() if resp.text else ""
-        for marker in DEAD_TEXT_MARKERS:
-            if marker in body_lower:
-                return {
-                    "status": "closed_inactive_text",
-                    "http_status": http,
-                    "checked_at": now_iso(),
-                }
-
-        return {"status": "verified_live", "http_status": http, "checked_at": now_iso()}
+        return resp
 
     # Should only be reached if _MAX_ATTEMPTS is 0 (impossible in practice)
-    return {"status": "error", "http_status": None, "checked_at": now_iso()}
+    return _result("error", None)

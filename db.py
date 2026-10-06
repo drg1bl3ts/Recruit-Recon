@@ -78,6 +78,7 @@ CLOSED_STATUSES = frozenset({
     "closed_404",
     "closed_410",
     "closed_inactive_text",
+    "closed_unposted",
     "disappeared_from_api",
     "error",
 })

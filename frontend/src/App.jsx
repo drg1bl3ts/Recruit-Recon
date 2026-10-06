@@ -204,6 +204,7 @@ function StatusPill({ status }) {
     closed_404:             { dot: "bg-rose-500",                  text: "text-rose-400",    label: "closed (404)" },
     closed_410:             { dot: "bg-rose-500",                  text: "text-rose-400",    label: "closed (410)" },
     closed_inactive_text:   { dot: "bg-rose-500",                  text: "text-rose-400",    label: "closed (page text)" },
+    closed_unposted:        { dot: "bg-rose-500",                  text: "text-rose-400",    label: "closed (unposted)" },
     disappeared_from_api:   { dot: "bg-rose-500",                  text: "text-rose-400",    label: "removed from feed" },
     error:                  { dot: "bg-amber-400",                 text: "text-amber-400",   label: "verify error" },
     skipped:                { dot: "bg-sky-500",                   text: "text-sky-400",     label: "static / unverified" },
@@ -600,7 +601,7 @@ export default function PriorityBoard() {
   // if an older jobs.json without the field is loaded.
   const buckets = useMemo(() => {
     const closedStatuses = data?.stats?.closed_statuses ?? [
-      "closed_404", "closed_410", "closed_inactive_text",
+      "closed_404", "closed_410", "closed_inactive_text", "closed_unposted",
       "disappeared_from_api", "error",
     ];
     const empty = { tierA: [], tierB: [], tierC: [], closed: [] };
