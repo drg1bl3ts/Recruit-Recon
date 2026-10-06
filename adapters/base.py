@@ -51,12 +51,19 @@ class Adapter(ABC):
     name: str = "base"
 
     def __init__(self, company_id: str, company_name: str, config: dict, *,
-                 user_agent: str = "RecruitRecon/0.1", timeout: int = 15):
+                 user_agent: str = "RecruitRecon/0.1", timeout: int = 15,
+                 title_filter: Optional[Callable[[str], bool]] = None):
         self.company_id = company_id
         self.company_name = company_name
         self.config = config or {}
         self.user_agent = user_agent
         self.timeout = timeout
+        # Same title-relevance check recon.py applies after fetch(). Adapters
+        # with an expensive per-posting step (e.g. Workday's description
+        # fetch) can call it first to skip postings recon.py would discard
+        # anyway. Never used to drop jobs from fetch() output — recon.py
+        # stays the single place that filters.
+        self.title_filter = title_filter
         # Reused across every request this adapter instance makes on the main
         # thread (the initial list fetch) for TCP/TLS connection reuse against
         # the same host, instead of a fresh handshake per request. NOT shared

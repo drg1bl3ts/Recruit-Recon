@@ -206,6 +206,23 @@ Then add an entry (Greenhouse example):
     board_token: my-company
 ```
 
+**Large Workday boards** (Cisco, HPE, Salesforce...) can have thousands of
+postings. Add `search_text` to narrow the list server-side, and raise
+`max_pages` (default 50 pages × 20 = 1000 postings) if the log warns it was
+hit. Workday indexes "cybersecurity" separately from "security", so query both:
+
+```yaml
+- id: cisco
+  name: Cisco
+  adapter: workday
+  config:
+    tenant: cisco
+    region: wd5
+    site_id: Cisco_Careers
+    search_text: [security, cybersecurity]
+    max_pages: 100
+```
+
 No ATS API? Use `adapter: static` with a `static_roles` list — this puts
 cards on the board linking straight to the careers page; verification still
 checks that page is up. For something scrapeable, see the next section.
@@ -263,4 +280,4 @@ runtime:
 
 [MIT](LICENSE)
 
-41 companies · 9 adapters · runs in ~5 minutes end-to-end.
+73 companies · 9 adapters · runs in ~10 minutes end-to-end.

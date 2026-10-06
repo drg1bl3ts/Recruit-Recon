@@ -404,6 +404,250 @@ companies:
       custom_domain: careers-peraton.icims.com
 
   # ===================================================================
+  # BIG TECH
+  # Large boards (hundreds to thousands of postings) — title_keywords does
+  # the heavy filtering. Few of these name GIAC certs, so expect mostly
+  # Tier B. Google / Microsoft / Amazon / Apple / Meta run their own
+  # career systems and need dedicated adapters (not added yet).
+  #
+  # Workday tenants here set search_text so the list is narrowed server-side
+  # before paging; "cybersecurity" is a separate search token from
+  # "security" in Workday's index, so both are queried.
+  # ===================================================================
+
+  # --- Workday ---
+
+  - id: salesforce
+    name: Salesforce
+    adapter: workday
+    config:
+      tenant: salesforce
+      region: wd12
+      site_id: External_Career_Site
+      search_text: [security, cybersecurity]
+
+  - id: adobe
+    name: Adobe
+    adapter: workday
+    config:
+      tenant: adobe
+      region: wd5
+      site_id: external_experienced
+      search_text: [security, cybersecurity]
+
+  - id: nvidia
+    name: NVIDIA
+    adapter: workday
+    config:
+      tenant: nvidia
+      region: wd5
+      site_id: NVIDIAExternalCareerSite
+      search_text: [security, cybersecurity]
+
+  - id: intel
+    name: Intel
+    adapter: workday
+    config:
+      tenant: intel
+      region: wd1
+      site_id: External
+      search_text: [security, cybersecurity]
+
+  - id: cisco
+    name: Cisco (incl. Splunk, Talos)
+    adapter: workday
+    # ~1400 postings match "security" (Workday's search is full-text), so
+    # max_pages is raised above the default 50 (= 1000 postings).
+    config:
+      tenant: cisco
+      region: wd5
+      site_id: Cisco_Careers
+      search_text: [security, cybersecurity]
+      max_pages: 100
+
+  - id: hpe
+    name: Hewlett Packard Enterprise
+    adapter: workday
+    # Same story as Cisco — ~1400 postings match "security".
+    config:
+      tenant: hpe
+      region: wd5
+      site_id: Jobsathpe
+      search_text: [security, cybersecurity]
+      max_pages: 100
+
+  - id: paypal
+    name: PayPal
+    adapter: workday
+    config:
+      tenant: paypal
+      region: wd1
+      site_id: jobs
+      search_text: [security, cybersecurity]
+
+  - id: workday
+    name: Workday
+    adapter: workday
+    config:
+      tenant: workday
+      region: wd5
+      site_id: Workday
+      search_text: [security, cybersecurity]
+
+  - id: broadcom
+    name: Broadcom (incl. VMware, Symantec)
+    adapter: workday
+    config:
+      tenant: broadcom
+      region: wd1
+      site_id: External_Career
+      search_text: [security, cybersecurity]
+
+  # --- Greenhouse ---
+
+  - id: cloudflare
+    name: Cloudflare
+    adapter: greenhouse
+    config:
+      board_token: cloudflare
+
+  - id: stripe
+    name: Stripe
+    adapter: greenhouse
+    config:
+      board_token: stripe
+
+  - id: datadog
+    name: Datadog
+    adapter: greenhouse
+    config:
+      board_token: datadog
+
+  - id: okta
+    name: Okta
+    adapter: greenhouse
+    config:
+      board_token: okta
+
+  - id: databricks
+    name: Databricks
+    adapter: greenhouse
+    config:
+      board_token: databricks
+
+  - id: anthropic
+    name: Anthropic
+    adapter: greenhouse
+    config:
+      board_token: anthropic
+
+  - id: coinbase
+    name: Coinbase
+    adapter: greenhouse
+    config:
+      board_token: coinbase
+
+  - id: robinhood
+    name: Robinhood
+    adapter: greenhouse
+    config:
+      board_token: robinhood
+
+  - id: airbnb
+    name: Airbnb
+    adapter: greenhouse
+    config:
+      board_token: airbnb
+
+  - id: pinterest
+    name: Pinterest
+    adapter: greenhouse
+    config:
+      board_token: pinterest
+
+  - id: reddit
+    name: Reddit
+    adapter: greenhouse
+    config:
+      board_token: reddit
+
+  - id: discord
+    name: Discord
+    adapter: greenhouse
+    config:
+      board_token: discord
+
+  - id: dropbox
+    name: Dropbox
+    adapter: greenhouse
+    config:
+      board_token: dropbox
+
+  - id: lyft
+    name: Lyft
+    adapter: greenhouse
+    config:
+      board_token: lyft
+
+  - id: twilio
+    name: Twilio
+    adapter: greenhouse
+    config:
+      board_token: twilio
+
+  - id: figma
+    name: Figma
+    adapter: greenhouse
+    config:
+      board_token: figma
+
+  - id: gitlab
+    name: GitLab
+    adapter: greenhouse
+    config:
+      board_token: gitlab
+
+  - id: mongodb
+    name: MongoDB
+    adapter: greenhouse
+    config:
+      board_token: mongodb
+
+  - id: elastic
+    name: Elastic
+    adapter: greenhouse
+    config:
+      board_token: elastic
+
+  # --- Lever ---
+
+  - id: palantir
+    name: Palantir
+    adapter: lever
+    config:
+      company: palantir
+
+  - id: spotify
+    name: Spotify
+    adapter: lever
+    config:
+      company: spotify
+
+  # --- Ashby ---
+
+  - id: openai
+    name: OpenAI
+    adapter: ashby
+    config:
+      slug: openai
+
+  - id: snowflake
+    name: Snowflake
+    adapter: ashby
+    config:
+      slug: snowflake
+
+  # ===================================================================
   # STATIC / DIRECT-EMAIL SHOPS
   # No automated source; emits a fixed reference card.
   # ===================================================================

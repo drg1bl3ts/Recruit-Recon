@@ -158,6 +158,7 @@ def run(cfg: dict, *, only_company: str = None, verify_pages: bool = True) -> tu
                 config=company.get("config", {}),
                 user_agent=user_agent,
                 timeout=timeout,
+                title_filter=lambda t: filters.title_matches(t, title_keywords),
             )
 
             try:
