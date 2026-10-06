@@ -74,10 +74,11 @@ class Adapter(ABC):
         # into worker threads — see _get_session().
         self.session = requests.Session()
         self._thread_local = threading.local()
-        # Set by _request on any RequestException. recon.py checks this right
-        # after fetch() returns to tell "genuinely empty board" apart from
-        # "source was unreachable" — adapters swallow their own network
-        # exceptions and yield nothing either way, so this is the only signal.
+        # Set by _request on a failed critical request (the job list itself).
+        # recon.py checks this right after fetch() returns to tell "genuinely
+        # empty board" apart from "source was unreachable" — adapters swallow
+        # their own network exceptions and yield nothing either way, so this
+        # is the only signal.
         self.had_errors = False
 
     @abstractmethod
@@ -109,7 +110,7 @@ class Adapter(ABC):
         return self._thread_local.session
 
     def _request(self, method: str, url: str, *, log_fn: Callable, error_msg: str,
-                 **kwargs) -> Optional[requests.Response]:
+                 critical: bool = True, **kwargs) -> Optional[requests.Response]:
         """
         Issue an HTTP request using this adapter's default timeout.
 
@@ -118,6 +119,12 @@ class Adapter(ABC):
         — so callers pass e.g. `log_fn=log.error` and an `error_msg` matching
         their original log line — and returns None so the caller can bail out
         exactly as it did before this helper existed.
+
+        Pass critical=False for per-job extras (description fetches): their
+        failure only costs that job its description, while the job list is
+        still complete. They must not set had_errors, or one timed-out
+        description would make recon.py skip the company's disappearance
+        check for the whole run (Arctic Wolf, 2026-10-06).
         """
         kwargs.setdefault("timeout", self.timeout)
         try:
@@ -139,7 +146,8 @@ class Adapter(ABC):
             resp.raise_for_status()
             return resp
         except requests.RequestException as e:
-            self.had_errors = True
+            if critical:
+                self.had_errors = True
             log_fn("%s: %s", error_msg, e)
             return None
 

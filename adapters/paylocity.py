@@ -227,6 +227,7 @@ class PaylocityAdapter(Adapter):
             headers=headers,
             log_fn=log.warning,
             error_msg=f"paylocity: detail fetch failed for {detail_url}",
+            critical=False,
         )
         if resp is None:
             return ""

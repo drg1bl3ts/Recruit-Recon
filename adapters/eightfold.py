@@ -173,6 +173,7 @@ class EightfoldAdapter(Adapter):
             headers=headers,
             log_fn=log.warning,
             error_msg=f"eightfold detail fetch failed for {self.company_id} ({pid})",
+            critical=False,
         )
         if not isinstance(data, dict):
             return ""
