@@ -1,5 +1,5 @@
 # RecruitRecon — company configuration
-# Adapters: greenhouse | lever | workable | workday | html_scraper | static
+# Adapters: greenhouse | lever | workable | workday | ashby | paylocity | icims | amazon | eightfold | google | html_scraper | static
 # Add new entries here; recon.py picks them up automatically.
 
 # --- title keywords that mark a posting as relevant ---
@@ -423,13 +423,55 @@ companies:
   # BIG TECH
   # Large boards (hundreds to thousands of postings) — title_keywords does
   # the heavy filtering. Few of these name GIAC certs, so expect mostly
-  # Tier B. Google / Microsoft / Amazon / Apple / Meta run their own
-  # career systems and need dedicated adapters (not added yet).
+  # Tier B. Apple and Meta run their own career systems with no usable
+  # public API, so they're static cards at the bottom of the list.
   #
   # Workday tenants here set search_text so the list is narrowed server-side
   # before paging; "cybersecurity" is a separate search token from
   # "security" in Workday's index, so both are queried.
   # ===================================================================
+
+  # --- Own career sites ---
+
+  - id: amazon
+    name: Amazon (incl. AWS)
+    adapter: amazon
+    # amazon.jobs search API. "security" matches ~9.4k postings (most AWS
+    # roles mention it) but pages fine (~95 requests); "threat" catches the
+    # odd Threat Intel role whose posting never says "security". Worldwide —
+    # add params: {"normalized_country_code[]": "USA"} to limit to the US.
+    config:
+      search_text: [security, threat]
+
+  - id: google
+    name: Google (incl. DeepMind, YouTube)
+    adapter: google
+    # Scrapes job data embedded in the careers results page — no public API,
+    # so this is the most likely entry to break. "security" is ~1300
+    # postings (~64 pages of ~1.3 MB, ~1 min); checked 2026-10 that
+    # narrower terms find nothing it misses. search_text defaults to it.
+    config: {}
+
+  - id: microsoft
+    name: Microsoft
+    adapter: eightfold
+    # Eightfold PCSX search, 10 results/page: "security" is ~1900 postings
+    # (~190 pages, ~2 min). Checked 2026-10 that narrower terms (threat,
+    # cyber, incident response, SOC, ...) find nothing "security" misses.
+    config:
+      host: apply.careers.microsoft.com
+      domain: microsoft.com
+      search_api: pcsx
+
+  - id: netflix
+    name: Netflix
+    adapter: eightfold
+    # Whole board is ~470 postings, so fetch all of it rather than search.
+    config:
+      host: explore.jobs.netflix.net
+      domain: netflix.com
+      search_api: v2
+      search_text: ""
 
   # --- Workday ---
 
@@ -662,6 +704,30 @@ companies:
     adapter: ashby
     config:
       slug: snowflake
+
+  # --- Static (no usable public API) ---
+
+  - id: apple
+    name: Apple
+    adapter: static
+    # jobs.apple.com's search API needs a per-session CSRF token.
+    config:
+      url: https://jobs.apple.com/en-us/search?search=security&sort=relevance
+      apply_url: https://jobs.apple.com/en-us/search?search=security&sort=relevance
+      note: "No public API — opens Apple's security job search."
+      static_roles:
+        - "Security Engineer / Offensive Security (check Apple jobs search)"
+
+  - id: meta
+    name: Meta
+    adapter: static
+    # metacareers.com is driven by a private GraphQL API.
+    config:
+      url: https://www.metacareers.com/jobsearch/?q=security
+      apply_url: https://www.metacareers.com/jobsearch/?q=security
+      note: "No public API — opens Meta's security job search."
+      static_roles:
+        - "Security Engineer / Red Team (check Meta careers search)"
 
   # ===================================================================
   # STATIC / DIRECT-EMAIL SHOPS

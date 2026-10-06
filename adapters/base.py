@@ -16,11 +16,15 @@ Canonical Job dict (the "wire format"):
 
 import logging
 import threading
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Optional
 
 import requests
+
+
+_MAX_429_RETRIES = 2
 
 
 @dataclass
@@ -117,7 +121,21 @@ class Adapter(ABC):
         """
         kwargs.setdefault("timeout", self.timeout)
         try:
-            resp = self._get_session().request(method, url, **kwargs)
+            for attempt in range(_MAX_429_RETRIES + 1):
+                resp = self._get_session().request(method, url, **kwargs)
+                # 429 — back off and retry, honouring a numeric Retry-After
+                # (capped), same policy as verify.py.
+                if resp.status_code == 429 and attempt < _MAX_429_RETRIES:
+                    try:
+                        wait = min(int(resp.headers.get("Retry-After", 5)), 30)
+                    except ValueError:
+                        wait = 30
+                    logging.getLogger(__name__).warning(
+                        "%s: HTTP 429, retrying in %ds (attempt %d/%d)",
+                        url, wait, attempt + 1, _MAX_429_RETRIES)
+                    time.sleep(wait)
+                    continue
+                break
             resp.raise_for_status()
             return resp
         except requests.RequestException as e:

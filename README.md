@@ -2,7 +2,8 @@
 
 A self-hosted, **local-only** job board for cybersecurity roles. It pulls
 listings straight from company ATS APIs (Greenhouse, Lever, Workable,
-Workday, Ashby, Paylocity, iCIMS, plus a generic HTML scraper), verifies each
+Workday, Ashby, Paylocity, iCIMS, Eightfold, plus Amazon's and Google's own
+career sites and a generic HTML scraper), verifies each
 one against the company's own page instead of trusting a stale aggregator,
 and tracks new/closed roles over time in SQLite.
 
@@ -29,9 +30,10 @@ below.
        └─┬──────────┬────────────┬────┘
          │          │            │
    greenhouse     lever      workable      ← ATS APIs (clean JSON)
-     workday      ashby      paylocity     ← (Workday/Paylocity/iCIMS also
-      icims    html_scraper   static         fetch per-job descriptions for
-         │          │            │           cert extraction where available)
+     workday      ashby      paylocity     ← (Workday/Paylocity/Eightfold also
+      icims     eightfold     amazon         fetch per-job descriptions for
+      google   html_scraper   static         cert extraction where available)
+         │          │            │
          └────┬─────┴────────────┘
               │
               ▼
@@ -261,6 +263,26 @@ For a prose-style page (each role is a heading followed by paragraphs, one
 shared apply link for the whole page), use `mode: heading_list` instead —
 see the docstring at the top of `adapters/html_scraper.py` for its options.
 
+## Big tech career sites
+
+Amazon, Google, Microsoft and Netflix don't use a shared ATS, so they have
+their own adapters. All of them search server-side (`search_text`, default
+`security`) because their full boards run to thousands of postings:
+
+| Adapter | Used by | Source | Notes |
+| --- | --- | --- | --- |
+| `amazon` | Amazon | `amazon.jobs/en/search.json` | Descriptions included. Optional `params` for filters, e.g. `{"normalized_country_code[]": "USA"}` |
+| `eightfold` | Microsoft, Netflix | Eightfold career-site API | `host`, `domain`, `search_api: pcsx` (Microsoft) or `v2` (Netflix) |
+| `google` | Google | Data embedded in the careers results page | **No public API — the most likely adapter to break.** On a format change it logs `could not find job data` and counts as a fetch error, so existing Google jobs aren't closed |
+
+Apple and Meta have no usable public API and are `static` cards linking to
+their security job searches.
+
+Verification note: Workday and Eightfold job pages return 200 even for
+closed jobs, so `verify.py` checks those URLs through the ATS's own job API
+instead (Eightfold job URLs carry a `?domain=` param for this). Google's
+closed jobs are caught by a dead-text marker.
+
 Need something the generic scraper can't handle? Subclass `Adapter` in a new
 file under `adapters/`, implement `fetch()` to yield `Job(...)` objects, and
 register it in `adapters/__init__.py`.
@@ -284,4 +306,4 @@ runtime:
 
 [MIT](LICENSE)
 
-73 companies · 9 adapters · runs in ~10 minutes end-to-end.
+79 companies · 12 adapters · runs in ~20 minutes end-to-end.

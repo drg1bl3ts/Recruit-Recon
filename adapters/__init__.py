@@ -8,6 +8,9 @@ from .paylocity import PaylocityAdapter
 from .html_scraper import HtmlScraperAdapter
 from .icims import ICIMSAdapter
 from .static import StaticAdapter
+from .amazon import AmazonAdapter
+from .eightfold import EightfoldAdapter
+from .google import GoogleAdapter
 
 REGISTRY = {
     "greenhouse": GreenhouseAdapter,
@@ -19,6 +22,9 @@ REGISTRY = {
     "html_scraper": HtmlScraperAdapter,
     "icims": ICIMSAdapter,
     "static": StaticAdapter,
+    "amazon": AmazonAdapter,
+    "eightfold": EightfoldAdapter,
+    "google": GoogleAdapter,
 }
 
 

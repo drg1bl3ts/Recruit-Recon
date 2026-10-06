@@ -12,6 +12,10 @@ Verification result codes:
     closed_410             - HTTP 410 (Workable's hard-delete)
     closed_inactive_text   - HTTP 200 but page contains a "this job is closed" marker
     closed_unposted        - Workday API says the posting was taken down (403 S22)
+
+Workday and Eightfold job pages can't be judged from the page itself (see
+_WORKDAY_PUBLIC_RE / _EIGHTFOLD_PUBLIC_RE), so those URLs are checked via
+the ATS's own job API first.
     error                  - network / parse failure after all retries
     skipped                - URL is non-HTTP (mailto:, empty) or verification disabled
 """
@@ -46,6 +50,7 @@ DEAD_TEXT_MARKERS = [
     "the position you are looking for is no longer available",
     "the position you are looking for could not be found",
     "page not found",
+    "this job may have been taken down",  # google careers (served with 200)
 ]
 
 _MAX_ATTEMPTS = 3
@@ -71,6 +76,25 @@ def _workday_api_url(url: str) -> Optional[str]:
         return None
     return (f"https://{m['tenant']}.{m['region']}.myworkdayjobs.com"
             f"/wday/cxs/{m['tenant']}/{m['site']}{m['path']}")
+
+
+# Eightfold (Microsoft, Netflix): the public page is also a JS shell on some
+# tenants, and the v2 detail API keeps returning 200 for closed postings.
+# The PCSX position_details endpoint 404s once a job is closed. The eightfold
+# adapter emits job URLs with ?domain= so this call can be built from them.
+_EIGHTFOLD_PUBLIC_RE = re.compile(
+    r"^https://(?P<host>[^/]+)/careers/job/(?P<id>\d+)\?(?:.*&)?domain=(?P<domain>[^&#]+)"
+)
+
+
+def _eightfold_api_url(url: str) -> Optional[str]:
+    """Map an eightfold-adapter job URL to its PCSX position_details URL,
+    or None if `url` isn't one."""
+    m = _EIGHTFOLD_PUBLIC_RE.match(url)
+    if not m:
+        return None
+    return (f"https://{m['host']}/api/pcsx/position_details"
+            f"?position_id={m['id']}&domain={m['domain']}")
 
 
 def _result(status: str, http_status) -> dict:
@@ -106,7 +130,7 @@ def verify_url(
 
     requester = session or requests
 
-    api_url = _workday_api_url(url)
+    api_url = _workday_api_url(url) or _eightfold_api_url(url)
     if api_url:
         resp = _get(requester, api_url, "application/json", user_agent, timeout)
         if isinstance(resp, requests.Response):
@@ -120,7 +144,7 @@ def verify_url(
         # Anything else (network failure, a tenant that blocks the API
         # outright) isn't a reliable signal either way — fall back to the
         # public page check below rather than call a live job closed.
-        log.debug("workday API check inconclusive for %s, falling back to page", url)
+        log.debug("job API check inconclusive for %s, falling back to page", url)
 
     resp = _get(requester, url, "text/html,*/*", user_agent, timeout)
     if not isinstance(resp, requests.Response):
